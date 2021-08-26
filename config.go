@@ -1,22 +1,20 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/cuigh/auxo/data"
 	"github.com/cuigh/auxo/encoding/yaml"
 	"github.com/cuigh/auxo/ext/files"
+	"github.com/joho/godotenv"
 )
 
 var loader = NewLoader()
 
-type ParseFunc func(filename string) (data.Map, error)
+type ParseFunc func(filename string) (interface{}, error)
 
 type Loader struct {
 	parsers map[string]ParseFunc
@@ -59,28 +57,11 @@ func (l *Loader) Load(dir, profile string) (string, error) {
 	return "", nil
 }
 
-func ParseEnv(filename string) (data.Map, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	m := data.Map{}
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if !strings.HasPrefix(line, "#") {
-			pair := strings.SplitN(line, "=", 2)
-			m.Set(pair[0], pair[1])
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return m, nil
+func ParseEnv(filename string) (interface{}, error) {
+	return godotenv.Read(filename)
 }
 
-func ParseJSON(filename string) (data.Map, error) {
+func ParseJSON(filename string) (interface{}, error) {
 	d, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -94,7 +75,7 @@ func ParseJSON(filename string) (data.Map, error) {
 	return m, nil
 }
 
-func ParseYaml(filename string) (data.Map, error) {
+func ParseYaml(filename string) (interface{}, error) {
 	d, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
