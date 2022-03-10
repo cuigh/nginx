@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -63,6 +64,10 @@ func injectConfig(dir, profile, varName string) error {
 
 	// place config variables before first script tag
 	index := bytes.Index(d, []byte("<script"))
+	if index == -1 {
+		return errors.New("no script tag in index.html")
+	}
+
 	f.Truncate()
 	f.Write(d[:index])
 	f.WriteString(fmt.Sprintf(`<script type="text/javascript">window.%s=%s</script>`, varName, c))
