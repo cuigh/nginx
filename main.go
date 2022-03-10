@@ -12,7 +12,6 @@ import (
 	"syscall"
 
 	"github.com/cuigh/auxo/config"
-	"github.com/cuigh/auxo/ext/files"
 )
 
 func main() {
@@ -47,12 +46,11 @@ func injectConfig(dir, profile, varName string) error {
 	writeLog("notice", "app: %s, profile: %s, config: %s", dir, profile, c)
 
 	filename := filepath.Join(dir, "index.html")
-	if files.NotExist(filename) {
-		return nil
-	}
-
 	d, err := os.ReadFile(filename)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -92,7 +90,7 @@ type FileWrapper struct {
 }
 
 func Open(filename string) (*FileWrapper, error) {
-	f, err := files.Open(filename)
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err
 	}
